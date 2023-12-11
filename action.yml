@@ -1,0 +1,49 @@
+name: mock rpm build
+author: John Wass
+description: Action for simple chroot building of RPMs
+branding:
+  icon: package
+  color: red
+
+inputs:
+  chroot:
+    description: Mock chroot id -- see https://github.com/rpm-software-management/mock/tree/main/mock-core-configs/etc/mock
+    required: true
+  srpm:
+    description: Path to the src rpm
+    required: true
+  resultdir:
+    description: Show mock logs
+    required: true
+    default: /tmp/mock
+  debug:
+    description: Show mock logs
+    required: false
+
+runs:
+  using: composite
+  steps:
+    - id: install-podman
+      run: sudo apt install -y podman
+
+    - id: create-container
+      run: podman run -dt --privileged -v $resultdir:/v fedora:latest > action.cid
+
+    - id: init-mock-env
+      run: |
+        cid=$(cat action.cid)
+        podman exec $cid dnf install -y mock
+        podman exec $cid mock -r $chroot --init
+
+    - id: build
+      run: |
+        cid=$(cat action.cid)
+        podman cp $srpm $cid:/tmp/$srpm
+        podman exec -$cid mock -r $chroot rebuild /tmp/$srpm --resultdir /v
+
+    - id: show-logs
+      if: $debug
+      run: |
+        cid=$(cat action.cid)
+        podman exec $cid ls -R /tmp/rpmbuild
+        podman exec $cid cat /tmp/rpmbuild/build.log
