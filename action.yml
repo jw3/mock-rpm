@@ -42,7 +42,7 @@ runs:
         podman exec -$cid mock -r $chroot rebuild /tmp/$srpm --resultdir /v
 
     - id: show-logs
-      if: $debug
+      if: ${{ debug }
       run: |
         cid=$(cat action.cid)
         podman exec $cid ls -R /tmp/rpmbuild
