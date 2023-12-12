@@ -46,4 +46,4 @@ jobs:
       - uses: ./
         with:
           chroot: fedora-39-x86_64
-          srpm: /tmp/src/simple-0.0.0.fc39.src.rpm
+          srpm: /tmp/src/simple-0.0.0-1.fc39.src.rpm

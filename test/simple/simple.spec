@@ -1,5 +1,5 @@
 Summary:       Nothing
-Name:          nada
+Name:          simple
 Version:       0.0.0
 Release:       1%{?dist}
 
