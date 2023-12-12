@@ -25,21 +25,25 @@ runs:
   steps:
     - id: install-podman
       run: sudo apt install -y podman
+      shell: bash
 
     - id: create-container
       run: podman run -dt --privileged -v $resultdir:/v fedora:latest > action.cid
+      shell: bash
 
     - id: init-mock-env
       run: |
         cid=$(cat action.cid)
         podman exec $cid dnf install -y mock
         podman exec $cid mock -r $chroot --init
+      shell: bash
 
     - id: build
       run: |
         cid=$(cat action.cid)
         podman cp $srpm $cid:/tmp/$srpm
         podman exec -$cid mock -r $chroot rebuild /tmp/$srpm --resultdir /v
+      shell: bash
 
     - id: show-logs
       if: ${{ debug }
@@ -47,3 +51,4 @@ runs:
         cid=$(cat action.cid)
         podman exec $cid ls -R /tmp/rpmbuild
         podman exec $cid cat /tmp/rpmbuild/build.log
+      shell: bash
