@@ -28,27 +28,28 @@ runs:
       shell: bash
 
     - id: create-container
-      run: podman run -dt --privileged -v $resultdir:/v fedora:latest > action.cid
+      run: podman run -dt --privileged -v ${{ inputs.resultdir }}:/v fedora:latest > action.cid
       shell: bash
 
     - id: init-mock-env
       run: |
         cid=$(cat action.cid)
         podman exec $cid dnf install -y mock
-        podman exec $cid mock -r $chroot --init
+        podman exec $cid mock -r ${{ inputs.chroot }} --init
       shell: bash
 
     - id: build
       run: |
         cid=$(cat action.cid)
-        podman cp $srpm $cid:/tmp/$srpm
-        podman exec -$cid mock -r $chroot rebuild /tmp/$srpm --resultdir /v
+        srpm=$(basename ${{ inputs.srpm }})
+        podman cp ${{ inputs.srpm }} $cid:/tmp/$srpm
+        podman exec -$cid mock -r ${{ inputs.chroot }} rebuild /tmp/$srpm --resultdir /v
       shell: bash
 
-#    - id: show-logs
-#      if: ${{ debug }}
-#      run: |
-#        cid=$(cat action.cid)
-#        podman exec $cid ls -R /tmp/rpmbuild
-#        podman exec $cid cat /tmp/rpmbuild/build.log
-#      shell: bash
+    - id: show-logs
+      if: ${{ inputs.debug }}
+      run: |
+        cid=$(cat action.cid)
+        podman exec $cid ls -R /tmp/rpmbuild
+        podman exec $cid cat /tmp/rpmbuild/build.log
+      shell: bash
