@@ -22,7 +22,7 @@ jobs:
           rpmbuild -bs -D "_topdir /tmp/rpmbuild" simple.spec
         working-directory: test/simple
       - name: Checksum artifacts
-        run: sha256sum /tmp/src/*.src.rpm
+        run: sha256sum /tmp/rpmbuild/SRPMS/*.src.rpm
       - name: Upload srpm
         uses: actions/upload-artifact@v3
         with:
