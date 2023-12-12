@@ -13,11 +13,11 @@ inputs:
     description: Path to the src rpm
     required: true
   resultdir:
-    description: Show mock logs
+    description: Path to write rpmbuild outputs
     required: true
     default: /tmp/mock
   debug:
-    description: Show mock logs
+    description: Show rpmbuild logs on success (auto on-fail)
     required: false
 
 runs:
@@ -49,9 +49,9 @@ runs:
       shell: bash
 
     - id: show-logs
-      if: always()
+      if: failure() || ${{ inputs.debug }}
       run: |
         cid=$(cat action.cid)
-        podman exec $cid ls -R /tmp/rpmbuild
-        podman exec $cid cat /tmp/rpmbuild/build.log
+        podman exec $cid ls -R ${{ inputs.resultdir }}
+        podman exec $cid cat ${{ inputs.resultdir }}/build.log
       shell: bash
