@@ -15,8 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run:  touch /tmp/src/simple-0.0.0.fc39.src.rpm
+      - run:  touch simple-0.0.0.fc39.src.rpm
       - uses: ./
         with:
           chroot: fedora-39-x86_64
-          srpm: /tmp/src/simple-0.0.0.fc39.src.rpm
+          srpm: simple-0.0.0.fc39.src.rpm
