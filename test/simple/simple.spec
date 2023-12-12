@@ -12,7 +12,7 @@ Testing the jw3/mock-rpm GitHub Action
 %prep
 
 %build
-echo %{version} > %{name}
+echo "echo %{version}" > %{name}
 
 %install
 install -D %{name} %{buildroot}/%{_bindir}/%{name}
