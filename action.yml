@@ -13,11 +13,11 @@ inputs:
     description: Path to the src rpm
     required: true
   resultdir:
-    description: Show mock logs
+    description: Path to write rpmbuild outputs
     required: true
     default: /tmp/mock
   debug:
-    description: Show mock logs
+    description: Show rpmbuild logs on success (auto on-fail)
     required: false
 
 runs:
@@ -25,25 +25,32 @@ runs:
   steps:
     - id: install-podman
       run: sudo apt install -y podman
+      shell: bash
 
     - id: create-container
-      run: podman run -dt --privileged -v $resultdir:/v fedora:latest > action.cid
+      run: |
+        mkdir -p ${{ inputs.resultdir }}
+        podman run -dt --privileged -v ${{ inputs.resultdir }}:/v fedora:latest > action.cid
+      shell: bash
 
     - id: init-mock-env
       run: |
         cid=$(cat action.cid)
         podman exec $cid dnf install -y mock
-        podman exec $cid mock -r $chroot --init
+        podman exec $cid mock -r ${{ inputs.chroot }} --init
+      shell: bash
 
     - id: build
       run: |
         cid=$(cat action.cid)
-        podman cp $srpm $cid:/tmp/$srpm
-        podman exec -$cid mock -r $chroot rebuild /tmp/$srpm --resultdir /v
+        srpm=$(basename ${{ inputs.srpm }})
+        podman cp ${{ inputs.srpm }} $cid:/tmp/$srpm
+        podman exec $cid mock -r ${{ inputs.chroot }} rebuild /tmp/$srpm --resultdir /v
+      shell: bash
 
     - id: show-logs
-      if: $debug
+      if: failure() || ${{ inputs.debug }}
       run: |
-        cid=$(cat action.cid)
-        podman exec $cid ls -R /tmp/rpmbuild
-        podman exec $cid cat /tmp/rpmbuild/build.log
+        ls -R ${{ inputs.resultdir }}
+        cat ${{ inputs.resultdir }}/build.log
+      shell: bash
