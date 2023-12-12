@@ -4,16 +4,15 @@ Version:       0.0.0
 Release:       1%{?dist}
 
 License:       MIT
-URL:           https://github.com/jw3/mock-rpm-action
+URL:           https://github.com/jw3/mock-rpm
 
 %description
-Testing the mock-rpm-action
+Testing the jw3/mock-rpm GitHub Action
 
 %prep
 
 %build
 echo %{version} > %{name}
-chmod +x %{name}
 
 %install
 install -D %{name} %{buildroot}/%{_bindir}/%{name}
