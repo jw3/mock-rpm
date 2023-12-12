@@ -46,7 +46,7 @@ runs:
       shell: bash
 
     - id: show-logs
-      if: ${{ debug }
+      if: ${{ debug }}
       run: |
         cid=$(cat action.cid)
         podman exec $cid ls -R /tmp/rpmbuild
