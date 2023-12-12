@@ -49,7 +49,7 @@ runs:
       shell: bash
 
     - id: show-logs
-      if: ${{ inputs.debug }}
+      if: always()
       run: |
         cid=$(cat action.cid)
         podman exec $cid ls -R /tmp/rpmbuild
