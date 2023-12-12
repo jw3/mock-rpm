@@ -45,7 +45,7 @@ runs:
         cid=$(cat action.cid)
         srpm=$(basename ${{ inputs.srpm }})
         podman cp ${{ inputs.srpm }} $cid:/tmp/$srpm
-        podman exec -$cid mock -r ${{ inputs.chroot }} rebuild /tmp/$srpm --resultdir /v
+        podman exec $cid mock -r ${{ inputs.chroot }} rebuild /tmp/$srpm --resultdir /v
       shell: bash
 
     - id: show-logs
