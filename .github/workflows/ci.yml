@@ -48,6 +48,12 @@ jobs:
           chroot: fedora-39-x86_64
           srpm: /tmp/src/simple-0.0.0-1.fc39.src.rpm
           debug: true
+      - name: Upload rpm
+        uses: actions/upload-artifact@v3
+        with:
+          name: rpm-artifacts
+          path: |
+            /tmp/mock/RPMS/*
 
   it:
     needs: [ rpm ]
