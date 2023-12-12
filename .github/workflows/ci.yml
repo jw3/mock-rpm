@@ -47,6 +47,7 @@ jobs:
         with:
           chroot: fedora-39-x86_64
           srpm: /tmp/src/simple-0.0.0-1.fc39.src.rpm
+          debug: true
 
   it:
     needs: [ rpm ]
