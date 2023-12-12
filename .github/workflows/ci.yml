@@ -49,7 +49,7 @@ jobs:
           srpm: /tmp/src/simple-0.0.0-1.fc39.src.rpm
           debug: true
       - name: Checksum artifacts
-        run: sha256sum /tmp/mock
+        run: sha256sum /tmp/mock/*
       - name: Upload rpm
         uses: actions/upload-artifact@v3
         with:
@@ -69,7 +69,7 @@ jobs:
           name: rpm-artifacts
           path: /tmp/src
       - name: Checksum artifacts
-        run: sha256sum /tmp/src/*.rpm
+        run: sha256sum /tmp/src/*
       - name: Install rpm
         run: dnf install -y /tmp/src/simple-0.0.0-1.fc39.x86_64.rpm
       - name: Test
