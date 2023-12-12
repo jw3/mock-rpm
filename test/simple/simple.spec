@@ -16,7 +16,7 @@ echo %{version} > %{name}
 chmod +x %{name}
 
 %install
-install -D simple-command %{buildroot}/%{_bindir}/%{name}
+install -D %{name} %{buildroot}/%{_bindir}/%{name}
 
 %check
 
