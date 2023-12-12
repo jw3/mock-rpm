@@ -45,10 +45,10 @@ runs:
         podman exec -$cid mock -r $chroot rebuild /tmp/$srpm --resultdir /v
       shell: bash
 
-    - id: show-logs
-      if: ${{ debug }}
-      run: |
-        cid=$(cat action.cid)
-        podman exec $cid ls -R /tmp/rpmbuild
-        podman exec $cid cat /tmp/rpmbuild/build.log
-      shell: bash
+#    - id: show-logs
+#      if: ${{ debug }}
+#      run: |
+#        cid=$(cat action.cid)
+#        podman exec $cid ls -R /tmp/rpmbuild
+#        podman exec $cid cat /tmp/rpmbuild/build.log
+#      shell: bash
