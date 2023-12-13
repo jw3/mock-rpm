@@ -10,14 +10,18 @@ name: build
 on: [push, pull_request]
 
 jobs:
-  test:
-    name: rpm
+  rpm:
     runs-on: ubuntu-latest
     steps:
-    - uses: jw3/mock-rpm@v1
-      with:
-        chroot: fedora-39-x86_64
-        srpm: simple-0.0.0.fc39.src.rpm
+      - uses: actions/checkout@v4
+      - uses: jw3/mock-srpm@v0
+        with:
+          chroot: fedora-39-x86_64
+          spec: test/simple/simple.spec
+      - uses: jw3/mock-rpm@v0
+        with:
+          chroot: fedora-39-x86_64
+          srpm: simple-*.src.rpm
 ```
 
 ## About Mock
