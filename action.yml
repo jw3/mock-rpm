@@ -15,7 +15,7 @@ inputs:
   result-dir:
     description: Path to write rpmbuild outputs
     required: true
-    default: /tmp/mock
+    default: .
   debug:
     description: Show rpmbuild logs on success (auto on-fail)
     required: false
@@ -30,7 +30,7 @@ runs:
     - id: create-container
       run: |
         mkdir -p ${{ inputs.result-dir }}
-        podman run -dt --privileged -v ${{ inputs.src }}:/in -v ${{ inputs.result-dir }}:/v fedora:latest > action.cid
+        podman run -dt --privileged -v ${{ inputs.src }}:/in -v ${{ inputs.result-dir }}:/out fedora:latest > action.cid
       shell: bash
 
     - id: init-mock-env
@@ -45,7 +45,7 @@ runs:
         cid=$(cat action.cid)
         srpm=$(basename ${{ inputs.srpm }})
         podman cp ${{ inputs.srpm }} $cid:/tmp/$srpm
-        podman exec $cid mock -r ${{ inputs.chroot }} --buildsrpm --spec ${{ inputs.spec }} --sources ${{ inputs.src }} --resultdir /v
+        podman exec $cid mock -r ${{ inputs.chroot }} --buildsrpm --spec ${{ inputs.spec }} --sources ${{ inputs.src }} --resultdir /out
       shell: bash
 
     - id: show-logs
