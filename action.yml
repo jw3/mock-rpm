@@ -30,7 +30,7 @@ runs:
     - id: create-container
       run: |
         mkdir -p ${{ inputs.result-dir }}
-        podman run -dt --privileged -v ${{ inputs.src }}:/in -v ${{ inputs.result-dir }}:/out fedora:latest > action.cid
+        podman run -dt --privileged -v ${{ inputs.result-dir }}:/out fedora:latest > action.cid
       shell: bash
 
     - id: init-mock-env
