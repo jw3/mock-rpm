@@ -4,7 +4,6 @@ on:
   push:
     branches: [master]
   pull_request:
-  workflow_dispatch:
 
 permissions:
   contents: read
@@ -21,10 +20,7 @@ jobs:
           mkdir -p /tmp/rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
           rpmbuild -bs -D "_topdir /tmp/rpmbuild" simple.spec
         working-directory: test/simple
-      - name: Checksum artifacts
-        run: sha256sum /tmp/rpmbuild/SRPMS/*.src.rpm
-      - name: Upload srpm
-        uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v3
         with:
           name: srpm-artifacts
           path: |
@@ -36,26 +32,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Download srpm
-        uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v3
         with:
           name: srpm-artifacts
-          path: /tmp/src
-      - name: Checksum artifacts
-        run: sha256sum /tmp/src/*.src.rpm
       - uses: ./
         with:
           chroot: fedora-39-x86_64
-          srpm: /tmp/src/simple-0.0.0-1.fc39.src.rpm
-          debug: true
-      - name: Checksum artifacts
-        run: sha256sum /tmp/mock/*
-      - name: Upload rpm
-        uses: actions/upload-artifact@v3
+          srpm: simple-*.src.rpm
+      - uses: actions/upload-artifact@v3
         with:
           name: rpm-artifacts
           path: |
-            /tmp/mock/*.rpm
+            *.x86_64.rpm
 
   it:
     needs: [ rpm ]
@@ -63,14 +51,9 @@ jobs:
     runs-on: ubuntu-latest
     container: fedora:39
     steps:
-      - name: Download rpm
-        uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v3
         with:
           name: rpm-artifacts
-          path: /tmp/src
-      - name: Checksum artifacts
-        run: sha256sum /tmp/src/*
-      - name: Install rpm
-        run: dnf install -y /tmp/src/simple-0.0.0-1.fc39.x86_64.rpm
+      - run: dnf install -y simple-*.rpm
       - name: Test
         run: simple
