@@ -3,6 +3,8 @@ Mock RPM Action
 
 This GitHub Action provides a friendly interface for building RPMs using Mock.
 
+For building source RPMs (SRPMs) please see the [`jw3/mock-srpm`](https://github.com/jw3/mock-srpm) action.
+
 ## Example workflow
 
 ```yaml
