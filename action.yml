@@ -27,10 +27,23 @@ runs:
       run: sudo apt install -y podman
       shell: bash
 
+    - id: prep-fs
+      run: |
+        mkdir -p ${{ inputs.result-dir }}
+        mkdir -p /tmp/cache/mock
+      shell: bash
+
+    - id: restore-bootstrap-cache
+      if: inputs.cache == 'true'
+      uses: actions/cache/restore@v3
+      with:
+        path: /tmp/cache/mock/${{ inputs.chroot }}-bootstrap
+        key: ${{ inputs.chroot }}-bootstrap-${{ hashFiles(inputs.spec) }}
+
     - id: create-container
       run: |
         mkdir -p ${{ inputs.result-dir }}
-        podman run -dt --privileged -v ${{ inputs.result-dir }}:/out fedora:latest > action.cid
+        podman run -dt --privileged -v ${{ inputs.result-dir }}:/out -v /tmp/cache/mock:/var/cache/mock fedora:latest > action.cid
       shell: bash
 
     - id: init-mock-env
@@ -40,11 +53,31 @@ runs:
         podman exec $cid mock -r ${{ inputs.chroot }} --init
       shell: bash
 
-    - id: build
+    - id: cache-chroot-bootstrap
+      if: inputs.cache == 'true' && steps.restore-bootstrap-cache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v3
+      with:
+        path: /tmp/cache/mock/${{ inputs.chroot }}-bootstrap
+        key: ${{ steps.restore-bootstrap-cache.outputs.cache-primary-key }}
+
+    - id: copy-in-srpm
       run: |
         cid=$(cat action.cid)
         srpm=$(basename ${{ inputs.srpm }})
         podman cp ${{ inputs.srpm }} $cid:/tmp/$srpm
+      shell: bash
+
+    - id: restore-chroot-cache
+      if: inputs.cache == 'true'
+      uses: actions/cache/restore@v3
+      with:
+        path: /tmp/cache/mock/${{ inputs.chroot }}
+        key: ${{ inputs.chroot }}-${{ hashFiles(inputs.spec) }}
+
+    - id: build
+      run: |
+        cid=$(cat action.cid)
+        srpm=$(basename ${{ inputs.srpm }})
         podman exec $cid mock -r ${{ inputs.chroot }} rebuild /tmp/$srpm --resultdir /out
       shell: bash
 
@@ -54,3 +87,10 @@ runs:
         ls -R ${{ inputs.result-dir }}
         cat ${{ inputs.result-dir }}/build.log
       shell: bash
+
+    - id: save-cache
+      if: inputs.cache == 'true' && steps.restore-chroot-cache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v3
+      with:
+        path: /tmp/cache/mock/${{ inputs.chroot }}
+        key: ${{ steps.restore-chroot-cache.outputs.cache-primary-key }}
