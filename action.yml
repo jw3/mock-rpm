@@ -33,12 +33,12 @@ runs:
         mkdir -p /tmp/cache/mock
       shell: bash
 
-    - id: restore-bootstrap-cache
+    - id: restore-mock-cache
       if: inputs.cache == 'true'
       uses: actions/cache/restore@v3
       with:
-        path: /tmp/cache/mock/${{ inputs.chroot }}-bootstrap
-        key: ${{ inputs.chroot }}-bootstrap-${{ hashFiles(inputs.spec) }}
+        path: /tmp/cache/mock
+        key: ${{ inputs.chroot }}-mock-${{ hashFiles(inputs.spec) }}
 
     - id: create-container
       run: |
@@ -53,12 +53,12 @@ runs:
         podman exec $cid mock -r ${{ inputs.chroot }} --init
       shell: bash
 
-    - id: cache-chroot-bootstrap
-      if: inputs.cache == 'true' && steps.restore-bootstrap-cache.outputs.cache-hit != 'true'
+    - id: cache-bootstrap-on-fail
+      if: inputs.cache == 'true' && failure()
       uses: actions/cache/save@v3
       with:
-        path: /tmp/cache/mock/${{ inputs.chroot }}-bootstrap
-        key: ${{ steps.restore-bootstrap-cache.outputs.cache-primary-key }}
+        path: /tmp/cache/mock
+        key: ${{ steps.restore-mock-cache.outputs.cache-primary-key }}
 
     - id: copy-in-srpm
       run: |
@@ -66,13 +66,6 @@ runs:
         srpm=$(basename ${{ inputs.srpm }})
         podman cp ${{ inputs.srpm }} $cid:/tmp/$srpm
       shell: bash
-
-    - id: restore-chroot-cache
-      if: inputs.cache == 'true'
-      uses: actions/cache/restore@v3
-      with:
-        path: /tmp/cache/mock/${{ inputs.chroot }}
-        key: ${{ inputs.chroot }}-${{ hashFiles(inputs.spec) }}
 
     - id: build
       run: |
@@ -89,8 +82,8 @@ runs:
       shell: bash
 
     - id: save-cache
-      if: inputs.cache == 'true' && steps.restore-chroot-cache.outputs.cache-hit != 'true'
+      if: inputs.cache == 'true' && always()
       uses: actions/cache/save@v3
       with:
-        path: /tmp/cache/mock/${{ inputs.chroot }}
-        key: ${{ steps.restore-chroot-cache.outputs.cache-primary-key }}
+        path: /tmp/cache/mock
+        key: ${{ steps.restore-mock-cache.outputs.cache-primary-key }}
