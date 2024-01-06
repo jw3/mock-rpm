@@ -12,10 +12,18 @@ inputs:
   srpm:
     description: Path to the src rpm
     required: true
+  image:
+    description: Image to use for build container
+    required: true
+    default: 'fedora:latest'
+  init-mock:
+    description: Optionally initialize mock chroot (disable for prebuilt images)
+    required: true
+    default: 'true'
   result-dir:
     description: Path to write rpmbuild outputs
     required: true
-    default: .
+    default: '.'
   debug:
     description: Show rpmbuild logs on success (auto on-fail)
     required: false
@@ -30,10 +38,11 @@ runs:
     - id: create-container
       run: |
         mkdir -p ${{ inputs.result-dir }}
-        podman run -dt --privileged -v ${{ inputs.result-dir }}:/out fedora:latest > action.cid
+        podman run -dt --privileged -v ${{ inputs.result-dir }}:/out ${{ inputs.image }} > action.cid
       shell: bash
 
     - id: init-mock-env
+      if: ${{ inputs.init-mock == 'true' }}
       run: |
         cid=$(cat action.cid)
         podman exec $cid dnf install -y mock
