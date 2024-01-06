@@ -26,6 +26,18 @@ jobs:
           srpm: simple-*.src.rpm
 ```
 
+## Inputs
+
+| Name           | Required | Default | Description                                                                                                     |
+|----------------|----------|---------|-----------------------------------------------------------------------------------------------------------------|
+| **chroot**     | Y        |         | Mock chroot id ([_list_](https://github.com/rpm-software-management/mock/tree/main/mock-core-configs/etc/mock)) |
+| **srpm**       | Y        |         | Path to the src rpm                                                                                             |
+| **result-dir** | Y        | .       | Path to write rpmbuild outputs                                                                                  |
+| debug          | N        | true    | Show rpmbuild logs on success (auto on-fail)                                                                    |
+
+
+
+
 ## About Mock
 
 Mock is used by the Fedora Build system to populate a chroot environment, which is then used in building a source-RPM (SRPM). It can be used for long-term management of a chroot environment, but generally a chroot is populated (using DNF), an SRPM is built in the chroot to generate binary RPMs, and the chroot is then discarded.
