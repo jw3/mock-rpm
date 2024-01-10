@@ -28,15 +28,22 @@ jobs:
 
 ## Inputs
 
-| Name           | Required | Default | Description                                                                                                     |
-|----------------|----------|---------|-----------------------------------------------------------------------------------------------------------------|
-| **chroot**     | Y        |         | Mock chroot id ([_list_](https://github.com/rpm-software-management/mock/tree/main/mock-core-configs/etc/mock)) |
-| **srpm**       | Y        |         | Path to the src rpm                                                                                             |
-| **result-dir** | Y        | .       | Path to write rpmbuild outputs                                                                                  |
-| debug          | N        | true    | Show rpmbuild logs on success (auto on-fail)                                                                    |
+| Name           | Required | Default         | Description                                                                                                     |
+|----------------|----------|-----------------|-----------------------------------------------------------------------------------------------------------------|
+| **chroot**     | Y        |                 | Mock chroot id ([_list_](https://github.com/rpm-software-management/mock/tree/main/mock-core-configs/etc/mock)) |
+| **srpm**       | Y        |                 | Path to the src rpm                                                                                             |
+| **cache**      | N        |                 | Enable chroot environment caching                                                                               |
+| **image**      | N        | 'fedora:latest' | Container image for Mock execution                                                                              |
+| **result-dir** | Y        | .               | Path to write rpmbuild outputs                                                                                  |
+| debug          | N        | true            | Show rpmbuild logs on success (auto on-fail)                                                                    |
 
+## Caching
 
+Using actions/cache to persit the Mock chroot, via the `root_cache` plugin, is enabled by default.
 
+Also cached is the container image, but only when mock has been installed by this action.
+
+To enable caching set the `cache` property to 'true'
 
 ## About Mock
 
