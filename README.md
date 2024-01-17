@@ -28,14 +28,14 @@ jobs:
 
 ## Inputs
 
-| Name           | Required | Default         | Description                                                                                                     |
-|----------------|----------|-----------------|-----------------------------------------------------------------------------------------------------------------|
-| **chroot**     | Y        |                 | Mock chroot id ([_list_](https://github.com/rpm-software-management/mock/tree/main/mock-core-configs/etc/mock)) |
-| **srpm**       | Y        |                 | Path to the src rpm                                                                                             |
-| **cache**      | N        |                 | Enable chroot environment caching                                                                               |
-| **image**      | N        | 'fedora:latest' | Container image for Mock execution                                                                              |
-| **result-dir** | Y        | .               | Path to write rpmbuild outputs                                                                                  |
-| debug          | N        | true            | Show rpmbuild logs on success (auto on-fail)                                                                    |
+| Name           | Required | Default            | Description                                                                                                     |
+|----------------|----------|--------------------|-----------------------------------------------------------------------------------------------------------------|
+| **chroot**     | Y        |                    | Mock chroot id ([_list_](https://github.com/rpm-software-management/mock/tree/main/mock-core-configs/etc/mock)) |
+| **srpm**       | Y        |                    | Path to the src rpm                                                                                             |
+| **cache**      | N        |                    | Enable chroot environment caching                                                                               |
+| **image**      | N        | `fedora:latest`    | Container image for Mock execution                                                                              |
+| **debug**      | N        |                    | Show rpmbuild logs on success (auto on-fail)                                                                    |
+| **result-dir** | Y        | `github.workspace` | Target path for writing build artifacts                                                                         |
 
 ## Caching
 
