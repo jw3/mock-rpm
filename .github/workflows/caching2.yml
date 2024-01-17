@@ -12,7 +12,6 @@ jobs:
   srpm:
     name: Build srpm
     runs-on: ubuntu-latest
-    container: fedora:39
     steps:
       - uses: actions/checkout@v4
       - name: bust cache
