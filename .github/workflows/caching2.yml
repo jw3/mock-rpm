@@ -25,7 +25,7 @@ jobs:
         with:
           name: srpm-artifacts
           path: |
-            /tmp/rpmbuild/SRPMS/*
+            *.src.rpm
 
   rpm:
     needs: [ srpm ]
