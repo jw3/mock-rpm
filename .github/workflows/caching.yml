@@ -1,8 +1,8 @@
-name: CI (simple)
+name: CI (caching)
 
 on:
   push:
-    branches: [master]
+    branches: [ master ]
   pull_request:
 
 permissions:
@@ -35,10 +35,24 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: srpm-artifacts
-      - uses: ./
+      - name: build rpm 1
+        uses: ./
         with:
           chroot: fedora-39-x86_64
           srpm: simple-*.src.rpm
+          cache: true
+      - name: build rpm 2
+        uses: ./
+        with:
+          chroot: fedora-39-x86_64
+          srpm: simple-*.src.rpm
+          cache: true
+      - name: build rpm 3
+        uses: ./
+        with:
+          chroot: fedora-39-x86_64
+          srpm: simple-*.src.rpm
+          cache: true
       - uses: actions/upload-artifact@v3
         with:
           name: rpm-artifacts

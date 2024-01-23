@@ -12,6 +12,13 @@ inputs:
   srpm:
     description: Path to the src rpm
     required: true
+  cache:
+    description: Enable chroot environment caching
+    required: false
+  image:
+    description: Container image for Mock execution
+    required: true
+    default: 'fedora:latest'
   result-dir:
     description: Path to write rpmbuild outputs
     required: true
@@ -27,24 +34,84 @@ runs:
       run: sudo apt install -y podman
       shell: bash
 
-    - id: create-container
+    - id: prep-fs
       run: |
         mkdir -p ${{ inputs.result-dir }}
-        podman run -dt --privileged -v ${{ inputs.result-dir }}:/out fedora:latest > action.cid
+        mkdir -p /tmp/cache/mock
       shell: bash
 
-    - id: init-mock-env
+    - id: restore-chroot
+      if: inputs.cache == 'true'
+      uses: actions/cache/restore@v3
+      with:
+        path: /tmp/cache/mock
+        key: chroot-${{ inputs.chroot }}-${{ hashFiles(inputs.srpm) }}
+
+    - id: restore-image
+      if: inputs.cache == 'true'
+      uses: actions/cache/restore@v3
+      with:
+        path: /tmp/cache/image.tar.gz
+        key: image-${{ hashFiles(inputs.srpm) }}-${{ inputs.image }}
+
+    - id: load-image
+      if: inputs.cache == 'true' && steps.restore-image.outputs.cache-hit == 'true'
+      run: |
+        podman load --input /tmp/cache/image.tar.gz
+        echo "${{ hashFiles(inputs.srpm) }}-${{ inputs.image }}" > action.iid
+      shell: bash
+
+    - id: create-container
+      run: |
+        iid=$(cat action.iid || echo "${{ inputs.image }}")
+        podman run -dt --privileged -v ${{ inputs.result-dir }}:/out -v /tmp/cache/mock:/var/cache/mock $iid > action.cid
+      shell: bash
+
+    - id: install-mock
       run: |
         cid=$(cat action.cid)
-        podman exec $cid dnf install -y mock
+        mockver=$(podman exec $cid mock --version || true)
+        if [[ -z $mockver ]]; then
+          podman exec $cid dnf install -y mock
+          echo "completed=true" >> $GITHUB_OUTPUT
+        fi
+      shell: bash
+
+    - id: save-container
+      if: inputs.cache == 'true' && steps.install-mock.outputs.completed == 'true'
+      run: |
+        cid=$(cat action.cid)
+        iid="${{ hashFiles(inputs.srpm) }}-${{ inputs.image }}"
+        podman commit $cid $iid
+        mkdir -p /tmp/mock
+        podman save $iid | gzip > /tmp/cache/image.tar.gz
+      shell: bash
+
+    - id: save-image
+      if: inputs.cache == 'true' && steps.restore-image.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v3
+      with:
+        path: /tmp/cache/image.tar.gz
+        key: ${{ steps.restore-image.outputs.cache-primary-key }}
+
+    - id: init-mock
+      if: inputs.cache != 'true' || steps.restore-chroot.outputs.cache-hit != 'true'
+      run: |
+        cid=$(cat action.cid)
         podman exec $cid mock -r ${{ inputs.chroot }} --init
+      shell: bash
+
+    - id: copy-in-srpm
+      run: |
+        cid=$(cat action.cid)
+        srpm=$(basename ${{ inputs.srpm }})
+        podman cp ${{ inputs.srpm }} $cid:/tmp/$srpm
       shell: bash
 
     - id: build
       run: |
         cid=$(cat action.cid)
         srpm=$(basename ${{ inputs.srpm }})
-        podman cp ${{ inputs.srpm }} $cid:/tmp/$srpm
         podman exec $cid mock -r ${{ inputs.chroot }} rebuild /tmp/$srpm --resultdir /out
       shell: bash
 
@@ -54,3 +121,10 @@ runs:
         ls -R ${{ inputs.result-dir }}
         cat ${{ inputs.result-dir }}/build.log
       shell: bash
+
+    - id: save-chroot
+      if: inputs.cache == 'true' && steps.restore-chroot.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v3
+      with:
+        path: /tmp/cache/mock
+        key: ${{ steps.restore-chroot.outputs.cache-primary-key }}
