@@ -16,11 +16,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: jw3/mock-srpm@v0
+      - uses: jw3/mock-srpm@v1
         with:
           chroot: fedora-39-x86_64
           spec: test/simple/simple.spec
-      - uses: jw3/mock-rpm@v0
+      - uses: jw3/mock-rpm@v1
         with:
           chroot: fedora-39-x86_64
           srpm: simple-*.src.rpm
