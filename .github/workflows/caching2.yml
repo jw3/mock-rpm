@@ -9,26 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  srpm:
-    name: Build srpm
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: bust cache
-        run: date | xargs -I{} echo "# {}" >> test/simple/simple.spec
-      - uses: jw3/mock-srpm@prepv1
-        with:
-          chroot: fedora-39-x86_64
-          spec: test/simple/simple.spec
-          cache: 'true'
-      - uses: actions/upload-artifact@v3
-        with:
-          name: srpm-artifacts
-          path: |
-            *.src.rpm
-
   rpm:
-    needs: [ srpm ]
     name: Build rpm with mock-rpm action
     runs-on: ubuntu-latest
     steps:
@@ -40,19 +21,7 @@ jobs:
         uses: ./
         with:
           chroot: fedora-39-x86_64
-          srpm: simple-*.src.rpm
-          cache: true
-      - name: build rpm 2
-        uses: ./
-        with:
-          chroot: fedora-39-x86_64
-          srpm: simple-*.src.rpm
-          cache: true
-      - name: build rpm 3
-        uses: ./
-        with:
-          chroot: fedora-39-x86_64
-          srpm: simple-*.src.rpm
+          spec: test/simple/simple.spec
           cache: true
       - uses: actions/upload-artifact@v3
         with:

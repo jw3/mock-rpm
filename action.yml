@@ -9,9 +9,18 @@ inputs:
   chroot:
     description: Mock chroot id -- see https://github.com/rpm-software-management/mock/tree/main/mock-core-configs/etc/mock
     required: true
-  srpm:
-    description: Path to the src rpm
+  spec:
+    description: Path to spec file
     required: true
+  sources:
+    description: Path (file or dir) mapped to the rpmbuild/SOURCES directory
+    required: false
+  fetch-sources:
+    description: Use spectool to fetch remote SourceX entries
+    required: false
+#  srpm:
+#    description: Path to the src rpm
+#    required: true
   cache:
     description: Enable chroot environment caching
     required: false
@@ -36,8 +45,26 @@ runs:
 
     - id: prep-fs
       run: |
+        touch /tmp/mock-container-args
         mkdir -p ${{ inputs.result-dir }}
         mkdir -p /tmp/cache/mock
+      shell: bash
+
+    - id: map-source
+      if: inputs.sources != null
+      run: |
+        src="${{ inputs.sources }}"
+        if [[ "$src" != /* ]]; then src="${{ github.workspace }}/$src"; fi 
+        if [[ -d ${src} ]]; then
+          arg="-v $src:/in:ro"
+        elif [[ -f ${src} ]]; then
+          fname=$(basename "${src}")
+          arg="-v $src:/in/$fname:ro"
+        else
+          echo "$src does not exist"
+          exit 1
+        fi
+        echo -n "$arg" > /tmp/mock-container-args
       shell: bash
 
     - id: restore-chroot
@@ -64,7 +91,7 @@ runs:
     - id: create-container
       run: |
         iid=$(cat action.iid || echo "${{ inputs.image }}")
-        podman run -dt --privileged -v ${{ inputs.result-dir }}:/out -v /tmp/cache/mock:/var/cache/mock $iid > action.cid
+        podman run -dt --privileged $(cat /tmp/mock-container-args) -v ${{ inputs.result-dir }}:/out -v /tmp/cache/mock:/var/cache/mock $iid > action.cid
       shell: bash
 
     - id: install-mock
@@ -75,6 +102,13 @@ runs:
           podman exec $cid dnf install -y mock
           echo "completed=true" >> $GITHUB_OUTPUT
         fi
+      shell: bash
+
+    - id: install-spectool
+      if: inputs.fetch-sources == 'true'
+      run: |
+        cid=$(cat action.cid)
+        podman exec $cid dnf install -y rpmdevtools
       shell: bash
 
     - id: save-container
@@ -101,14 +135,50 @@ runs:
         podman exec $cid mock -r ${{ inputs.chroot }} --init
       shell: bash
 
-    - id: copy-in-srpm
+    - id: copy-in-sources
+      if: inputs.sources != null
       run: |
         cid=$(cat action.cid)
-        srpm=$(basename ${{ inputs.srpm }})
-        podman cp ${{ inputs.srpm }} $cid:/tmp/$srpm
+        for f in $(podman exec $cid ls /in); do
+          podman exec $cid mock -r ${{ inputs.chroot }} --copyin /in/$f /builddir/build/SOURCES
+        done
       shell: bash
 
-    - id: build
+    - id: copy-in-spec
+      run: |
+        cid=$(cat action.cid)
+        spec=$(basename ${{ inputs.spec }})
+        podman cp ${{ inputs.spec }} $cid:/tmp/$spec
+        podman exec $cid mock -r ${{ inputs.chroot }} --copyin /tmp/$spec /builddir/build/SPECS
+      shell: bash
+
+    - id: fetch-remote-sources
+      if: inputs.fetch-sources == 'true'
+      run: |
+        cid=$(cat action.cid)
+        spec=$(basename ${{ inputs.spec }})
+        podman exec $cid spectool -g -C /tmp/fetch /tmp/$spec
+        for f in $(podman exec $cid ls /tmp/fetch); do
+          podman exec $cid mock -r ${{ inputs.chroot }} --copyin /tmp/fetch/$f /builddir/build/SOURCES
+        done
+      shell: bash
+
+    - id: build-srpm
+      run: |
+        cid=$(cat action.cid)
+        spec=$(basename ${{ inputs.spec }})
+        podman exec $cid mock -r ${{ inputs.chroot }} --shell rpmbuild -bs /builddir/build/SPECS/$spec
+        podman exec $cid mock -r ${{ inputs.chroot }} --copyout /builddir/build/SRPMS/* /out
+      shell: bash
+
+#    - id: copy-in-srpm
+#      run: |
+#        cid=$(cat action.cid)
+#        srpm=$(basename ${{ inputs.srpm }})
+#        podman cp ${{ inputs.srpm }} $cid:/tmp/$srpm
+#      shell: bash
+
+    - id: build-rpm
       run: |
         cid=$(cat action.cid)
         srpm=$(basename ${{ inputs.srpm }})
@@ -116,7 +186,7 @@ runs:
       shell: bash
 
     - id: show-logs
-      if: failure() || ${{ inputs.debug }}
+      if: failure() || inputs.debug == 'true'
       run: |
         ls -R ${{ inputs.result-dir }}
         cat ${{ inputs.result-dir }}/build.log
