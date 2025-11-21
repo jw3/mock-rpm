@@ -22,7 +22,7 @@ jobs:
           pr_number=${{ github.event.pull_request.number }}
           patched_version="0.${pr_number}.${commit_number}"
           sed -i "s#Version:\s*${spec_version}#Version: ${patched_version}#" test/simple/simple.spec
-          grep Version ${{ matrix.props.spec }}
+          grep Version test/simple/simple.spec
 
       - name: build rpm 1
         uses: ./
