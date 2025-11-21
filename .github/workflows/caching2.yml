@@ -14,14 +14,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: patch spec with pull request version
+      - name: patch spec version
         if: github.event_name == 'pull_request'
         run: |
-          spec_version=$(grep "Version:" | tr -s ' ' | cut -d' ' -f2)
+          spec_version=$(grep "Version:" test/simple/simple.spec | tr -s ' ' | cut -d' ' -f2)
           commit_number=${{ github.event.pull_request.commits }}
           pr_number=${{ github.event.pull_request.number }}
           patched_version="0.${pr_number}.${commit_number}"
-          sed -i "s#Version:\s*${spec_version}#Version: ${patched_version}#" ${{ matrix.props.spec }}
+          sed -i "s#Version:\s*${spec_version}#Version: ${patched_version}#" test/simple/simple.spec
           grep Version ${{ matrix.props.spec }}
 
       - name: build rpm 1
