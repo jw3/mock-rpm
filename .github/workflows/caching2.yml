@@ -14,10 +14,29 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          name: srpm-artifacts
+      - name: patch spec with pull request version
+        if: github.event_name == 'pull_request'
+        run: |
+          spec_version=$(grep "Version:" | tr -s ' ' | cut -d' ' -f2)
+          commit_number=${{ github.event.pull_request.commits }}
+          pr_number=${{ github.event.pull_request.number }}
+          patched_version="0.${pr_number}.${commit_number}"
+          sed -i "s#Version:\s*${spec_version}#Version: ${patched_version}#" ${{ matrix.props.spec }}
+          grep Version ${{ matrix.props.spec }}
+
       - name: build rpm 1
+        uses: ./
+        with:
+          chroot: fedora-43-x86_64
+          spec: test/simple/simple.spec
+          cache: true
+      - name: build rpm 2
+        uses: ./
+        with:
+          chroot: fedora-43-x86_64
+          spec: test/simple/simple.spec
+          cache: true
+      - name: build rpm 3
         uses: ./
         with:
           chroot: fedora-43-x86_64
