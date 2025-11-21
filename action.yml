@@ -192,9 +192,9 @@ runs:
         cat ${{ inputs.result-dir }}/build.log
       shell: bash
 
-    - id: save-chroot
-      if: inputs.cache == 'true' && steps.restore-chroot.outputs.cache-hit != 'true'
-      uses: actions/cache/save@v3
-      with:
-        path: /tmp/cache/mock
-        key: ${{ steps.restore-chroot.outputs.cache-primary-key }}
+#    - id: save-chroot
+#      if: inputs.cache == 'true' && steps.restore-chroot.outputs.cache-hit != 'true'
+#      uses: actions/cache/save@v3
+#      with:
+#        path: /tmp/cache/mock
+#        key: ${{ steps.restore-chroot.outputs.cache-primary-key }}
