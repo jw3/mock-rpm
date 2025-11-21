@@ -20,7 +20,7 @@ jobs:
       - name: build rpm 1
         uses: ./
         with:
-          chroot: fedora-39-x86_64
+          chroot: fedora-43-x86_64
           spec: test/simple/simple.spec
           cache: true
       - uses: actions/upload-artifact@v4
