@@ -72,20 +72,20 @@ runs:
       uses: actions/cache/restore@v3
       with:
         path: /tmp/cache/mock
-        key: chroot-${{ inputs.chroot }}-${{ hashFiles(inputs.srpm) }}
+        key: chroot-${{ inputs.chroot }}-${{ hashFiles(inputs.spec) }}
 
     - id: restore-image
       if: inputs.cache == 'true'
       uses: actions/cache/restore@v3
       with:
         path: /tmp/cache/image.tar.gz
-        key: image-${{ hashFiles(inputs.srpm) }}-${{ inputs.image }}
+        key: image-${{ hashFiles(inputs.spec) }}-${{ inputs.image }}
 
     - id: load-image
       if: inputs.cache == 'true' && steps.restore-image.outputs.cache-hit == 'true'
       run: |
         podman load --input /tmp/cache/image.tar.gz
-        echo "${{ hashFiles(inputs.srpm) }}-${{ inputs.image }}" > action.iid
+        echo "${{ hashFiles(inputs.spec) }}-${{ inputs.image }}" > action.iid
       shell: bash
 
     - id: create-container
@@ -115,7 +115,7 @@ runs:
       if: inputs.cache == 'true' && steps.install-mock.outputs.completed == 'true'
       run: |
         cid=$(cat action.cid)
-        iid="${{ hashFiles(inputs.srpm) }}-${{ inputs.image }}"
+        iid="${{ hashFiles(inputs.spec) }}-${{ inputs.image }}"
         podman commit $cid $iid
         mkdir -p /tmp/mock
         podman save $iid | gzip > /tmp/cache/image.tar.gz
