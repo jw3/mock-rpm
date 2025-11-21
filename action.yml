@@ -181,7 +181,7 @@ runs:
     - id: build-rpm
       run: |
         cid=$(cat action.cid)
-        srpm=$(find /out -name *.src.rpm)
+        srpm=$(podman exec $cid find /out -name *.src.rpm)
         podman exec $cid mock -r ${{ inputs.chroot }} --rebuild $srpm --resultdir /out
       shell: bash
 
