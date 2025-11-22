@@ -9,51 +9,18 @@ permissions:
   contents: read
 
 jobs:
-  srpm:
-    name: Build srpm
-    runs-on: ubuntu-latest
-    container: fedora:39
-    steps:
-      - uses: actions/checkout@v4
-      - run: |
-          dnf install -y rpmdevtools
-          mkdir -p /tmp/rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
-          rpmbuild -bs -D "_topdir /tmp/rpmbuild" simple.spec
-        working-directory: test/simple
-      - uses: actions/upload-artifact@v3
-        with:
-          name: srpm-artifacts
-          path: |
-            /tmp/rpmbuild/SRPMS/*
-
   rpm:
-    needs: [ srpm ]
     name: Build rpm with mock-rpm action
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v3
-        with:
-          name: srpm-artifacts
-      - name: build rpm 1
+      - name: build rpm
         uses: ./
         with:
-          chroot: fedora-39-x86_64
-          srpm: simple-*.src.rpm
+          chroot: fedora-43-x86_64
+          spec: test/simple/simple.spec
           cache: true
-      - name: build rpm 2
-        uses: ./
-        with:
-          chroot: fedora-39-x86_64
-          srpm: simple-*.src.rpm
-          cache: true
-      - name: build rpm 3
-        uses: ./
-        with:
-          chroot: fedora-39-x86_64
-          srpm: simple-*.src.rpm
-          cache: true
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: rpm-artifacts
           path: |
@@ -63,9 +30,9 @@ jobs:
     needs: [ rpm ]
     name: Integration test rpm
     runs-on: ubuntu-latest
-    container: fedora:39
+    container: fedora:43
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: rpm-artifacts
       - run: dnf install -y simple-*.rpm

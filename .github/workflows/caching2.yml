@@ -9,52 +9,40 @@ permissions:
   contents: read
 
 jobs:
-  srpm:
-    name: Build srpm
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: bust cache
-        run: date | xargs -I{} echo "# {}" >> test/simple/simple.spec
-      - uses: jw3/mock-srpm@prepv1
-        with:
-          chroot: fedora-39-x86_64
-          spec: test/simple/simple.spec
-          cache: 'true'
-      - uses: actions/upload-artifact@v3
-        with:
-          name: srpm-artifacts
-          path: |
-            *.src.rpm
-
   rpm:
-    needs: [ srpm ]
     name: Build rpm with mock-rpm action
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v3
-        with:
-          name: srpm-artifacts
+      - name: patch spec version
+        if: github.event_name == 'pull_request'
+        run: |
+          spec_version=$(grep "Version:" test/simple/simple.spec | tr -s ' ' | cut -d' ' -f2)
+          commit_number=${{ github.event.pull_request.commits }}
+          pr_number=${{ github.event.pull_request.number }}
+          patched_version="0.${pr_number}.${commit_number}"
+          sed -i "s#Version:\s*${spec_version}#Version: ${patched_version}#" test/simple/simple.spec
+          grep Version test/simple/simple.spec
+
       - name: build rpm 1
         uses: ./
         with:
-          chroot: fedora-39-x86_64
-          srpm: simple-*.src.rpm
+          chroot: fedora-43-x86_64
+          spec: test/simple/simple.spec
           cache: true
       - name: build rpm 2
         uses: ./
         with:
-          chroot: fedora-39-x86_64
-          srpm: simple-*.src.rpm
+          chroot: fedora-43-x86_64
+          spec: test/simple/simple.spec
           cache: true
       - name: build rpm 3
         uses: ./
         with:
-          chroot: fedora-39-x86_64
-          srpm: simple-*.src.rpm
+          chroot: fedora-43-x86_64
+          spec: test/simple/simple.spec
           cache: true
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: rpm-artifacts
           path: |

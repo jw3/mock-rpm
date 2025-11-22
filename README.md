@@ -3,7 +3,7 @@ Mock RPM Action
 
 This GitHub Action provides a friendly interface for building RPMs using Mock.
 
-For building source RPMs (SRPMs) please see the [`jw3/mock-srpm`](https://github.com/jw3/mock-srpm) action.
+For building source RPMs (SRPMs) only, please see the [`jw3/mock-srpm`](https://github.com/jw3/mock-srpm) action.
 
 ## Example workflow
 
@@ -16,26 +16,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: jw3/mock-srpm@v1
+      - uses: jw3/mock-rpm@v2
         with:
           chroot: fedora-39-x86_64
           spec: test/simple/simple.spec
-      - uses: jw3/mock-rpm@v1
-        with:
-          chroot: fedora-39-x86_64
-          srpm: simple-*.src.rpm
 ```
 
 ## Inputs
 
-| Name           | Required | Default            | Description                                                                                                     |
-|----------------|----------|--------------------|-----------------------------------------------------------------------------------------------------------------|
-| **chroot**     | Y        |                    | Mock chroot id ([_list_](https://github.com/rpm-software-management/mock/tree/main/mock-core-configs/etc/mock)) |
-| **srpm**       | Y        |                    | Path to the src rpm                                                                                             |
-| **cache**      | N        |                    | Enable chroot environment caching                                                                               |
-| **image**      | N        | `fedora:latest`    | Container image for Mock execution                                                                              |
-| **debug**      | N        |                    | Show rpmbuild logs on success (auto on-fail)                                                                    |
-| **result-dir** | Y        | `github.workspace` | Target path for writing build artifacts                                                                         |
+| Name              | Required | Default            | Description                                                                                                     |
+|-------------------|----------|--------------------|-----------------------------------------------------------------------------------------------------------------|
+| **chroot**        | Y        |                    | Mock chroot id ([_list_](https://github.com/rpm-software-management/mock/tree/main/mock-core-configs/etc/mock)) |
+| **spec**          | Y        |                    | Path to spec file                                                                                               |
+| **sources**       | N        |                    | Path (file or dir) mapped to the rpmbuild/SOURCES directory                                                     |
+| **fetch-sources** | N        |                    | Use spectool to fetch remote SourceX entries                                                                    |
+| **cache**         | N        |                    | Enable chroot environment caching                                                                               |
+| **image**         | N        | `fedora:latest`    | Container image for Mock execution                                                                              |
+| **debug**         | N        |                    | Show rpmbuild logs on success (auto on-fail)                                                                    |
+| **result-dir**    | Y        | `github.workspace` | Target path for writing build artifacts                                                                         |
+
 
 ## Caching
 
